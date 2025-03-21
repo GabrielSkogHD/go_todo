@@ -1,7 +1,10 @@
 package todo
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
 	"time"
 )
 
@@ -13,6 +16,14 @@ type item struct {
 }
 
 type Todos []item
+
+func (t *Todos) Print() {
+
+	for i, item := range *t {
+		fmt.Printf("%d - %s\n", i, item.Task)
+	}
+
+}
 
 func (t *Todos) Add(task string) {
 
@@ -50,3 +61,34 @@ func (t *Todos) Delete(index int) error {
 }
 
 //https://www.youtube.com/watch?v=j1CXoOQXbco 10:03
+
+func (t *Todos) Load(filename string) error {
+
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
+
+	}
+	if len(file) == 0 {
+		return err
+	}
+	err = json.Unmarshal(file, t)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func (t *Todos) Store(filename string) error {
+
+	data, err := json.Marshal(t)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(filename, data, 0644)
+}
